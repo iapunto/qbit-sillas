@@ -13,8 +13,13 @@
   "keywords": [],
   "dependencies": {
     "@builderbot-plugins/gemini-layer": "^0.0.2",
+    "@builderbot-plugins/url-to-base64": "^1.0.0",
     "@builderbot/bot": "1.2.5",
-    "@builderbot/provider-meta": "1.2.5"
+    "@builderbot/provider-meta": "1.2.5",
+    "@google/generative-ai": "^0.24.0",
+    "@langchain/core": "^0.3.48",
+    "@langchain/google-genai": "^0.2.4",
+    "date-fns": "^4.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.30",
