@@ -14,12 +14,12 @@ COPY pnpm-lock.yaml ./
 # Instalar dependencias de compilación y Python
 RUN apk add --update --no-cache --virtual .gyp \
     python3 \
-    python3-dev \    # Necesario para pip/setuptools [[5]]
+    python3-dev \
     make \
     g++ \
-    build-base \     # Herramientas de compilación esenciales [[6]]
-    linux-headers \  # Headers del kernel para módulos nativos [[6]]
-    musl-dev \       # Librerías C para Alpine [[6]]
+    build-base \
+    linux-headers \
+    musl-dev \
     git
 
 # Copiar código fuente y construir
