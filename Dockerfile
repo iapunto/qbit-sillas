@@ -10,7 +10,7 @@ COPY . .
 
 COPY package*.json *-lock.yaml ./
 
-RUN apk add --no-cache --virtual .gyp \
+RUN apk add --update --no-cache --virtual .gyp \
         python3 \
         make \
         g++ \
@@ -37,4 +37,4 @@ RUN npm cache clean --force && pnpm install --production --ignore-scripts \
     && addgroup -g 1001 -S nodejs && adduser -S -u 1001 nodejs \
     && rm -rf $PNPM_HOME/.npm $PNPM_HOME/.node-gyp
 
-CMD ["npm", "start"]
+CMD ["pnpm", "start"]
