@@ -10,13 +10,12 @@ COPY . .
 
 COPY package*.json *-lock.yaml ./
 
-RUN apk add --update --no-cache --virtual .gyp \
+RUN apk add --no-cache --virtual .gyp \
         python3 \
         make \
         g++ \
     && apk add --no-cache git \
-    && pnpm install \
-    && pnpm run build \
+    && pnpm install && pnpm run build \
     && apk del .gyp
 
 FROM node:21-alpine3.18 as deploy
