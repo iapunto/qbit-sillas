@@ -6,8 +6,9 @@ import { config } from "~/config";
 import sellerFlow from "~/flows/seller.flow";
 
 const PORT = config.port;
-
 const main = async () => {
+  console.log("Iniciando la aplicación...");
+  // Log al inicio
   const adapterFlow = createFlow([welcomeFlow, sellerFlow]);
   const { httpServer } = await createBot({
     flow: adapterFlow,
@@ -15,6 +16,7 @@ const main = async () => {
     database: adapterDB,
   });
   httpServer(+PORT);
+  console.log(`Servidor escuchando en el puerto ${PORT}`); // Log del puerto
 };
 
 main();

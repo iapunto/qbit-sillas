@@ -1,32 +1,33 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { config } from "../config";
+import { config } from "~/config";
+import { logger } from "~/utils/logger"; // Importa el logger
 
 class GeminiService {
   private genAI: GoogleGenerativeAI;
-  private model: any; // Puedes especificar el tipo más adelante si es necesario
 
   constructor() {
-    this.genAI = new GoogleGenerativeAI(config.googleApiKey as string);
-    this.model = this.genAI.getGenerativeModel({ model: "gemini-pro" });
+    this.genAI = new GoogleGenerativeAI(config.googleApiKey);
   }
 
   async generateContent(prompt: string): Promise<any> {
     try {
-      const result = await this.model.generateContent(prompt);
-      const response = result.response;
+      logger.debug("GeminiService - Prompt:", prompt); // Log the prompt
 
-      if (!response || !response.text) {
-        console.warn("Respuesta del modelo vacía o sin texto.");
-        return {
-          response: { text: () => "Lo siento, no obtuve una respuesta clara." },
-        };
-      }
+      const model = this.genAI.getGenerativeModel({
+        model: "gemini-2.0-flash",
+      });
+      logger.debug("GeminiService - Modelo:", model); // Log the model object
 
-      return { response };
+      const result = await model.generateContent(prompt);
+      logger.debug("GeminiService - Resultado:", result); // Log the raw result
+
+      return result;
     } catch (error: any) {
-      console.error("Error al generar contenido:", error.message || error);
-      // Considera lanzar el error nuevamente o manejarlo de otra manera
-      // dependiendo de tus necesidades
+      logger.error(
+        "GeminiService - Error al generar contenido con Gemini:",
+        error.message || error
+      );
+      logger.error("GeminiService - Error detallado:", error); // Log the full error object
       throw error;
     }
   }

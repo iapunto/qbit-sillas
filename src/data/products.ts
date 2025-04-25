@@ -27,7 +27,7 @@ export const productList = [
   {
     name: "Silla Ergonómica Sihoo Ergomax M97B",
     price: "$2.600.000",
-    link: "https://sillas.com.co/tienda/silla-ergonomica-sihoo-ergomax-m97b/",
+    link: "https://sillas.com.co/tienda/silla-ergonomica-ergomax-m97b/",
   },
   {
     name: "SILLA GERENCIAL DELPHI ALUMINIO",

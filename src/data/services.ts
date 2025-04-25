@@ -72,7 +72,6 @@ export const servicesData = [
     benefits: [
       "Automatización de procesos repetitivos",
       "Integración de herramientas y sistemas",
-
       "Sincronización de datos entre plataformas",
       "Soluciones personalizadas para tu negocio",
     ],
