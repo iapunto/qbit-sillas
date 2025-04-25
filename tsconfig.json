@@ -15,14 +15,15 @@
     "rootDir": "./",
     "incremental": true,
     "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
     "paths": {
       "~/*": ["./src/*"]
     }
   },
-  "include": [
-    "**/*.js",
-    "**/*.ts"
-  ],
+  "include": ["**/*.js", "**/*.ts"],
   "exclude": [
     "node_modules",
     "dist",

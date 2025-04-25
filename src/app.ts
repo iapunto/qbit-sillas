@@ -1,22 +1,20 @@
 import { createBot, createFlow } from "@builderbot/bot";
-import { MemoryDB } from "@builderbot/bot";
-import { config } from "./config";
-import welcomeFlow from "~/flows/welcomeFlow";
 import { provider } from "~/provider";
+import { adapterDB } from "~/database";
+import welcomeFlow from "~/flows/welcome.flow";
+import { config } from "~/config";
+import sellerFlow from "~/flows/seller.flow";
 
-const PORT = process.env.PORT ?? 3008;
+const PORT = config.port;
 
 const main = async () => {
-  const adapterFlow = createFlow([welcomeFlow]);
+  const adapterFlow = createFlow([welcomeFlow, sellerFlow]);
   const { httpServer } = await createBot({
     flow: adapterFlow,
-    provider,
-    database: new MemoryDB(),
+    provider: provider,
+    database: adapterDB,
   });
-
-  httpServer(+config.port);
+  httpServer(+PORT);
 };
 
-main().catch((err) => {
-  console.error("Error al iniciar el bot:", err);
-});
+main();

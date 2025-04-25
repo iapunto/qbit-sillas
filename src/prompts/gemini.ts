@@ -86,7 +86,7 @@ export default async (ctx: any) => {
   console.log("Vigilance: Entering geminiHandler");
   console.log("Vigilance: Context:", ctx);
 
-  const userMessage = ctx.event.text;
+  const userMessage = ctx?.event?.text;
   const history = ctx.state.history || ""; // Get chat history from context
 
   console.log("Vigilance: Extracted User Message:", userMessage);
