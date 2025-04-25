@@ -1,7 +1,11 @@
 // src/flows/seller.flow.ts
 import { addKeyword, EVENTS } from "@builderbot/bot";
 import GeminiService from "../services/geminiService";
-import { getHistoryParse, handleHistory } from "../utils/handledHistory";
+import {
+  getHistoryParse,
+  handleHistory,
+  clearHistory,
+} from "../utils/handledHistory";
 import { generateTimer } from "../utils/generateTimer";
 import { logger } from "../utils/logger";
 
@@ -160,12 +164,42 @@ const generatePromptSeller = (history: string, message: string) => {
   );
 };
 
+const IDLE_TIMEOUT = 60000; // 1 minuto de inactividad
+const FINAL_TIMEOUT = 30000; // 30 segundos adicionales después de preguntar si está en línea
+
+const emptyFlow = addKeyword("EMPTY_FLOW").addAction(() => {});
+
 const sellerFlow = addKeyword(EVENTS.ACTION).addAction(
   async (ctx, { state, flowDynamic, gotoFlow }) => {
     try {
+      const lastMessageTime = state.get("lastMessageTime") || Date.now();
+      const currentTime = Date.now();
+      const askedIfOnline = state.get("askedIfOnline") || false;
+
+      // Verificar tiempo de inactividad
+      if (currentTime - lastMessageTime > IDLE_TIMEOUT && !askedIfOnline) {
+        await flowDynamic("¿Aún estás en línea? 😊");
+        state.update({ askedIfOnline: true, lastMessageTime: currentTime }); // Marcar que se hizo la pregunta
+        return;
+      }
+
+      // Si ya se preguntó "¿Aún estás en línea?" y no hay respuesta
+      if (askedIfOnline && currentTime - lastMessageTime > FINAL_TIMEOUT) {
+        await flowDynamic(
+          "¡Hasta luego! Estaremos aquí cuando nos necesites. 👋"
+        );
+        clearHistory(state); // Limpiar el historial
+        gotoFlow(emptyFlow); // Finalizar el flujo
+        return;
+      }
+
+      // Actualizar el tiempo del último mensaje
+      state.update({ lastMessageTime: currentTime });
+
       logger.info("sellerFlow - Recibido mensaje del usuario:", ctx.body);
       const geminiServices = new GeminiService();
       const history = getHistoryParse(state);
+
       logger.debug("sellerFlow - Historial de conversación:", history);
 
       const prompt = generatePromptSeller(history, ctx.body);
@@ -174,6 +208,20 @@ const sellerFlow = addKeyword(EVENTS.ACTION).addAction(
       const result = await geminiServices.generateContent(prompt);
       const response = result.response.text();
       logger.debug("sellerFlow - Respuesta del modelo:", response);
+
+      // Evitar respuestas repetitivas
+      const lastBotMessage = state.get("lastBotMessage");
+      if (lastBotMessage === response) {
+        await flowDynamic(
+          "¡Gracias por contactarnos! Si tienes más preguntas, no dudes en escribirnos. 😊"
+        );
+        clearHistory(state); // Limpiar el historial
+        gotoFlow(emptyFlow); // Finalizar el flujo
+        return;
+      }
+
+      // Guardar el último mensaje enviado por el bot
+      state.update({ lastBotMessage: response });
 
       await handleHistory({ content: response, role: "assistant" }, state);
       logger.debug("sellerFlow - Historial actualizado.");
