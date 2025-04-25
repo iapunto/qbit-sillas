@@ -36,13 +36,9 @@ const PROMPT_SELLER = `
     Si el usuario pregunta por descuentos, menciona:
     "¡La Sihoo Doro S300 está en preventa con 10% OFF! Versión gris: 3.550.000COP.Reservacon1.000.000 COP. 🎉 [Link] " 
     .
-    Agendar Contacto o Compras :
-    Si el usuario muestra interés en comprar, redirige:
-    "¡Genial! Visita nuestro catálogo: sillas.com.co/tienda o escríbenos a Instagram (@sillas.com.co) para asesoría. 📲".
-
-    Respuesta Fuera de Horario :
-    Fuera de 9:00–17:00 (lunes–viernes):
-    "¡Hola! Nuestro equipo te atenderá en horario laboral. Déjanos un mensaje y te contactaremos. ⏰"
+    Compras :
+    Si el usuario muestra interés en comprar, muestra las opciones de {PRODUCTS} disponibles para que tenga la oportunidad de escojer:
+    "Dirijelo con palabras guiadores como rango de precios y o funcionalidades y uso que va a tener la silla 📲".
 
     Preguntas Fuera de Alcance :
     Si el usuario pregunta algo no relacionado:
