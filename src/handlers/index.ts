@@ -65,7 +65,7 @@ export const handleIntents = async (
       return gotoFlow(sellerFlow);
     } else {
       logger.warn("Intent Handler - No se reconoció la intención, enviando mensaje de error");
-      await flowDynamic("Lo siento, no pude entender tu mensaje. ¿Podrías reformularlo?");
+      await flowDynamic("Lo siento, solo puedo ayudarte con información sobre sillas ergonómicas de gama media y alta de las marca SIHOO o las que tenemos disponibles. ¿Te gustaría conocer nuestros productos?");
     }
   } catch (error: any) {
     logger.error("Intent Handler - Error handling intent:", error);

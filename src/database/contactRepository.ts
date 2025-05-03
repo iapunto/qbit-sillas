@@ -25,4 +25,16 @@ export async function getContactByPhone(phone: string): Promise<Contact | null> 
     [phone]
   );
   return res.rows[0] || null;
+}
+
+export async function getAllContacts() {
+  const res = await pool.query(`
+    SELECT c.*, 
+      COALESCE(MAX(m.created_at), c.updated_at) AS last_activity
+    FROM contacts c
+    LEFT JOIN messages m ON m.contact_id = c.id
+    GROUP BY c.id
+    ORDER BY last_activity DESC
+  `);
+  return res.rows;
 } 

@@ -6,6 +6,8 @@ import { config } from "~/config";
 import sellerFlow from "~/flows/seller.flow";
 import { logger } from "~/utils/logger";
 import { saveBotMessageToDB } from "~/utils/handledHistory";
+import { getConversationByContact } from "~/database/messageRepository";
+import { getAllContacts } from "~/database/contactRepository"; 
 
 const PORT = config.port;
 
@@ -19,7 +21,37 @@ function setupRoutes(handleCtx: any) {
       return res.end("sended");
     })
   );
+  
+  // NUEVO ENDPOINT PARA OBTENER LA CONVERSACIÓN DE UN CONTACTO
+  provider.server.get(
+    "/v1/contacts/:contactId/conversation",
+    handleCtx(async (_bot: any, req: any, res: any) => {
+      const { contactId } = req.params;
+      try {
+        const messages = await getConversationByContact(Number(contactId));
+        res.end(JSON.stringify(messages));
+      } catch (error) {
+        logger.error("Error al obtener la conversación:", error);
+        res.status(500).json({ error: "Error al obtener la conversación" });
+      }
+    })
+  );
+
+  provider.server.get(
+    "/v1/contacts",
+    handleCtx(async (_bot: any, _req: any, res: any) => {
+      try {
+        const contacts = await getAllContacts();
+        res.end(JSON.stringify(contacts));
+      } catch (error) {
+        logger.error("Error al obtener los contactos:", error);
+        res.status(500).end(JSON.stringify({ error: "Error al obtener los contactos" }));
+      }
+    })
+  );
 }
+
+
 
 async function initializeBot() {
   logger.info("Iniciando la aplicación...");
