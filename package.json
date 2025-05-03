@@ -19,12 +19,19 @@
     "@google/generative-ai": "^0.24.0",
     "@langchain/core": "^0.3.48",
     "@langchain/google-genai": "^0.2.4",
+    "chalk": "^5.4.1",
+    "chrono-node": "^2.8.0",
+    "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
-    "date-fns-tz": "^3.2.0"
+    "date-fns-tz": "^3.2.0",
+    "lucide-react": "^0.507.0",
+    "pg": "^8.15.6",
+    "tailwind-merge": "^3.2.0"
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
     "@types/node": "^20.11.30",
+    "@types/pg": "^8.11.14",
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.4.0",
     "eslint": "^8.52.0",

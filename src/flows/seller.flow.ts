@@ -9,73 +9,21 @@ import {
 import { generateTimer } from "../utils/generateTimer";
 import { logger } from "../utils/logger";
 import { productList } from "~/data/products";
+import { filterProducts, Product } from "~/utils/productFilter";
+import { sellerPrompt } from "./prompts/sellerPrompt";
+import { saveBotMessageToDB } from "../utils/handledHistory";
 
-const PROMPT_SELLER = `
-    Instrucciones para el BOT :
-    Nombre del BOT : SillaBot 🪑
-    Rol : Asistente virtual especializado en ventas y soporte para Sillas.com.co.
-
-    Reglas de Respuesta :
-    Saludo Inicial :
-    Si el usuario inicia con "hola", "buenos días", etc., responde:
-    "¡Hola! Soy SillaBot, tu asistente virtual de Sillas.com.co. 😊 ¿Buscas una silla ergonómica para mejorar tu comodidad en el trabajo o estudio?" 
-    .
-    Mensajes Repetidos o Sin Claridad :
-    Si el usuario repite saludos o mensajes vagos, responde:
-    "¿Te gustaría conocer nuestras sillas ergonómicas más vendidas, como la Sihoo Doro S300 o la Ergomax M97B? ¡Son ideales para cuidar tu postura! 🛋️" 
-    .
-    Interacciones Prolongadas Sin Intención Clara :
-    Si tras 5+ mensajes no hay claridad, pregunta:
-    "¡Hola de nuevo! 😊 ¿Necesitas ayuda para elegir una silla, consultar promociones o ver modelos específicos?" 
-    .
-    Consultas Sobre Productos :
-    Si el usuario menciona un modelo (ej.: "Sihoo Doro S300"), responde con detalles del JSON:
-    "La Sihoo Doro S300 en color negro tiene un precio especial de $3.465.000 COP. ¡Aprovecha la preventa hasta abril 2025! 🛒 [Link] " 
-    .
-    Promociones o Ofertas :
-    Si el usuario pregunta por descuentos, menciona:
-    "¡La Sihoo Doro S300 está en preventa con 10% OFF! Versión gris: 3.550.000COP.Reservacon1.000.000 COP. 🎉 [Link] " 
-    .
-    Compras :
-    Si el usuario muestra interés en comprar, muestra las opciones de {PRODUCTS} disponibles para que tenga la oportunidad de escojer:
-    "Dirijelo con palabras guiadores como rango de precios y o funcionalidades y uso que va a tener la silla 📲".
-
-    Preguntas Fuera de Alcance :
-    Si el usuario pregunta algo no relacionado:
-    "Lo siento, no entiendo tu consulta. 😕 ¿Te refieres a nuestras sillas ergonómicas o promociones?"
-
-    Información de Sillas.com.co :
-    Quiénes Somos :
-    Especialistas en sillas ergonómicas para oficina y estudio.
-
-    Modelos destacados:
-    Sihoo Doro S300 : Reclinación antigravedad y soporte lumbar.
-    Ergomax M97B : Ajustes de altura y reposabrazos 4D.
-
-    Promociones Vigentes :
-    Preventa Sihoo Doro S300 : Hasta el 30/04/2025 con 10% OFF.
-
-    Lista de Productos Disponibles :
-    {PRODUCTS}
-
-    Contacto :
-    Instagram: @sillas.com.co (11K seguidores).
-    Sitio web: sillas.com.co .
-    WhatsApp: +57 316 376 9935 (ejemplo).
-    Historial de Conversación :
-    {HISTORY}
-
-    Mensaje del Usuario :
-    {MESSAGE}
-
-    Formato de Respuesta :
-    Lenguaje amigable, emojis relacionados (🪑, 🛒, 🎉).
-    Prioridad a redirigir a ventas o contacto directo.
-    `;
+const formatCOP = (value: number) =>
+  new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
 
 const generatePromptSeller = (history: string, message: string) => {
   const products = JSON.stringify(productList);
-  return PROMPT_SELLER.replace("{HISTORY}", history)
+  return sellerPrompt.replace("{HISTORY}", history)
     .replace("{MESSAGE}", message)
     .replace("{PRODUCTS}", products);
 };
@@ -83,8 +31,7 @@ const generatePromptSeller = (history: string, message: string) => {
 const IDLE_TIMEOUT = 60000; // 1 minuto de inactividad
 const FINAL_TIMEOUT = 30000; // 30 segundos adicionales después de preguntar si está en línea
 
-const emptyFlow = addKeyword("EMPTY_FLOW").addAction(() => {});
-
+// Flujo principal del bot
 const sellerFlow = addKeyword(EVENTS.ACTION).addAction(
   async (ctx, { state, flowDynamic, gotoFlow }) => {
     try {
@@ -92,10 +39,16 @@ const sellerFlow = addKeyword(EVENTS.ACTION).addAction(
       const currentTime = Date.now();
       const askedIfOnline = state.get("askedIfOnline") || false;
 
+      // Actualizar el tiempo del último mensaje
+      await state.update({ lastMessageTime: currentTime });
+
       // Verificar tiempo de inactividad
       if (currentTime - lastMessageTime > IDLE_TIMEOUT && !askedIfOnline) {
         await flowDynamic("¿Aún estás en línea? 😊");
-        state.update({ askedIfOnline: true, lastMessageTime: currentTime }); // Marcar que se hizo la pregunta
+        await state.update({
+          askedIfOnline: true,
+          lastMessageTime: currentTime,
+        });
         return;
       }
 
@@ -105,63 +58,158 @@ const sellerFlow = addKeyword(EVENTS.ACTION).addAction(
           "¡Hasta luego! Estaremos aquí cuando nos necesites. 👋"
         );
         clearHistory(state); // Limpiar el historial
-        gotoFlow(emptyFlow); // Finalizar el flujo
         return;
       }
 
-      // Actualizar el tiempo del último mensaje
-      state.update({ lastMessageTime: currentTime });
+      // Si el usuario respondió después de inactividad, retomar la conversación
+      if (askedIfOnline && ctx.body.trim().toLowerCase() !== "") {
+        await state.update({ askedIfOnline: false }); // Reiniciar el estado
 
-      logger.info("sellerFlow - Recibido mensaje del usuario:", ctx.body);
-      const geminiServices = new GeminiService();
-      const history = getHistoryParse(state);
+        // Leer el historial para retomar la conversación
+        const history = state.get("history") || [];
+        const lastMessage =
+          history.length > 0 ? history[history.length - 1] : null;
 
-      logger.debug("sellerFlow - Historial de conversación:", history);
-
-      const prompt = generatePromptSeller(history, ctx.body);
-      logger.debug("sellerFlow - Prompt generado:", prompt);
-
-      const result = await geminiServices.generateContent(prompt);
-      let response = result.response.text();
-      logger.debug("sellerFlow - Respuesta del modelo:", response);
-
-      // Reemplazar placeholders de enlaces usando la lista de productos
-      productList.forEach((product) => {
-        const placeholder = `[Link a la ${product.name.split(" - ")[0]}]`;
-        response = response.replace(placeholder, product.link);
-      });
-
-      // Evitar respuestas repetitivas
-      const lastBotMessage = state.get("lastBotMessage");
-      if (lastBotMessage === response) {
-        await flowDynamic(
-          "¡Gracias por contactarnos! Si tienes más preguntas, no dudes en escribirnos. 😊"
-        );
-        clearHistory(state); // Limpiar el historial
-        gotoFlow(emptyFlow); // Finalizar el flujo
+        if (lastMessage) {
+          // Enviar un mensaje contextual basado en el historial
+          await flowDynamic([
+            "¡Genial! Estoy aquí nuevamente. 😊",
+            `Últimamente hablábamos sobre: *${lastMessage.content}*`,
+            "¿Cómo quieres que sigamos buscando opciones?",
+          ]);
+        } else {
+          // Si no hay historial, enviar un mensaje genérico
+          await flowDynamic([
+            "¡Genial! Estoy aquí nuevamente. 😊",
+            "¿Cómo podemos seguir ayudándote?",
+          ]);
+        }
         return;
       }
 
-      // Guardar el último mensaje enviado por el bot
-      state.update({ lastBotMessage: response });
-
-      await handleHistory({ content: response, role: "assistant" }, state);
-      logger.debug("sellerFlow - Historial actualizado.");
-
-      const chunks = response.split(/(?<!\d)\.\s+/g);
-      for (const chunk of chunks) {
+      // Procesar saludos iniciales
+      if (
+        /^(hola|buenos días|buenas tardes|buenas noches)$/i.test(
+          ctx.body.trim()
+        )
+      ) {
         await flowDynamic([
-          { body: chunk.trim(), delay: generateTimer(2000, 3500) },
+          "¡Hola! Soy SillaBot, tu asistente virtual de Sillas.com.co. 😊 ¿Buscas una silla ergonómica para mejorar tu comodidad en el trabajo o estudio?",
         ]);
-        logger.info("sellerFlow - Mensaje enviado al usuario:", chunk.trim());
+        await saveBotMessageToDB(ctx.from,
+          "¡Hola! Soy SillaBot, tu asistente virtual de Sillas.com.co. 😊 ¿Buscas una silla ergonómica para mejorar tu comodidad en el trabajo o estudio?",
+        );
+        return;
       }
+
+      // Procesar respuestas afirmativas generales
+      if (/^(sí|si|claro|por favor|ok)$/i.test(ctx.body.trim())) {
+        await flowDynamic([
+          "¡Genial! 😊 Para ayudarte mejor, responderé algunas preguntas rápidas. ¿Cuál es el uso principal que le darás a la silla?",
+          "1️⃣ Trabajo desde casa o en oficina (uso diario)",
+          "2️⃣ Uso ocasional o para espacios compartidos",
+          "3️⃣ Gaming o actividades intensivas",
+          "4️⃣ No estoy seguro/a",
+        ]);
+        await state.update({ step: "usage" }); // Guardar el estado actual del flujo
+        return;
+      }
+
+      // Manejar las respuestas del usuario en el proceso interactivo
+      const currentStep = state.get("step");
+
+      if (currentStep === "usage") {
+        const usageResponse = ctx.body.trim();
+        let filteredProducts: Product[] = [];
+
+        if (/^(1|trabajo|oficina)$/i.test(usageResponse)) {
+          filteredProducts = filterProducts(productList, { minPrice: 2000000 }); // Gama alta
+        } else if (
+          /^(2|uso ocasional|espacios compartidos)$/i.test(usageResponse)
+        ) {
+          filteredProducts = filterProducts(productList, { maxPrice: 1000000 }); // Gama media
+        } else if (/^(3|gaming|intensivas)$/i.test(usageResponse)) {
+          filteredProducts = filterProducts(productList, { minPrice: 2500000 }); // Gama alta especializada
+        } else {
+          await flowDynamic("Entendido. Sigamos explorando opciones. 😊");
+        }
+
+        // Mostrar los productos filtrados
+        if (filteredProducts.length > 0) {
+          for (const product of filteredProducts) {
+            const formattedMessage = `
+              *${product.name}*
+              Precio: ${formatCOP(product.price)}
+              Descripción: ${product.description || "Sin descripción"}
+              Link: ${product.link || "No disponible"}
+            `;
+            await flowDynamic([
+              {
+                body: formattedMessage,
+                media: product.image || undefined,
+              },
+            ]);
+            logger.info(
+              "sellerFlow - Mensaje enviado al usuario:",
+              formattedMessage
+            );
+          }
+        } else {
+          await flowDynamic(
+            "No encontré productos que coincidan con tu búsqueda. 😕 ¿Te gustaría ver otras opciones?"
+          );
+        }
+
+        // Actualizar el estado para avanzar al siguiente paso
+        await state.update({ step: "next_step" });
+        return;
+      }
+
+      // Procesar respuestas negativas o incompletas
+      if (/^(no|nop|no gracias)$/i.test(ctx.body.trim())) {
+        await flowDynamic(
+          "Entendido. Si cambias de opinión, aquí estaré para ayudarte. 😊"
+        );
+        return;
+      }
+
+      // Si no se entiende la respuesta, pedir clarificación
+      await flowDynamic(
+        "No entendí tu respuesta. 😕 ¿Podrías elegir una de las opciones anteriores?"
+      );
+
+      // Guardar el historial
+      await handleHistory({ content: ctx.body, role: "user" }, state);
     } catch (error: any) {
       logger.error("sellerFlow - Error:", error.message || error);
       await flowDynamic(
-        "Lo siento, no puedo generar una respuesta en este momento. 😕"
+        "Lo siento, ocurrió un error al procesar tu solicitud. 😕"
       );
     }
   }
 );
+
+/**
+ * Formatea la respuesta para que cada producto tenga un formato claro y único.
+ */
+function formatProductResponse(products: Product[]) {
+  if (!Array.isArray(products) || products.length === 0) {
+    return [
+      {
+        body: "No encontré productos que coincidan con tu búsqueda. 😕 ¿Te gustaría ver otras opciones?",
+      },
+    ];
+  }
+
+  return products.map((product) => ({
+    body: `
+*${product.name}*
+Precio: ${formatCOP(product.price)}
+Descripción: ${product.description || "Sin descripción"}
+Link: ${product.link || "No disponible"}
+`,
+    media: product.image || undefined,
+  }));
+}
 
 export default sellerFlow;

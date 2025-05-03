@@ -1,26 +1,37 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, GenerativeModel } from "@google/generative-ai";
 import { config } from "~/config";
 import { logger } from "~/utils/logger"; // Importa el logger
 
-class GeminiService {
+/**
+ * Servicio para interactuar con Google Gemini
+ */
+export interface GeminiResponse {
+  response: any; // Puedes tipar mejor si conoces la estructura
+}
+
+export class GeminiService {
   private genAI: GoogleGenerativeAI;
+  private defaultModel: string = "gemini-2.0-flash";
 
   constructor() {
     this.genAI = new GoogleGenerativeAI(config.googleApiKey);
   }
 
-  async generateContent(prompt: string): Promise<any> {
+  /**
+   * Genera contenido usando Gemini
+   * @param prompt - El prompt a enviar
+   * @param model - (Opcional) Modelo a usar
+   */
+  async generateContent(prompt: string, model?: string): Promise<GeminiResponse> {
     try {
-      logger.debug("GeminiService - Prompt:", prompt); // Log the prompt
-
-      const model = this.genAI.getGenerativeModel({
-        model: "gemini-2.0-flash",
+      logger.debug("GeminiService - Prompt:", prompt);
+      const modelName = model || this.defaultModel;
+      const generativeModel: GenerativeModel = this.genAI.getGenerativeModel({
+        model: modelName,
       });
-      logger.debug("GeminiService - Modelo:", model); // Log the model object
-
-      const result = await model.generateContent(prompt);
-      logger.debug("GeminiService - Resultado:", result); // Log the raw result
-
+      logger.debug("GeminiService - Modelo usado:", modelName);
+      const result = await generativeModel.generateContent(prompt);
+      logger.debug("GeminiService - Respuesta recibida");
       return result;
     } catch (error: any) {
       logger.error(

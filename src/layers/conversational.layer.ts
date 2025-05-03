@@ -1,9 +1,11 @@
 import { BotContext, BotMethods } from "@builderbot/bot/dist/types";
 import { handleHistory } from "../utils/handledHistory";
 import { logger } from "../utils/logger"; // Importa el logger
+import { saveContact, getContactByPhone } from "~/database/contactRepository";
+import { saveMessage } from "~/database/messageRepository";
 
 /**
- * Almacena todos los mensajes del usuario en el `state`.
+ * Almacena todos los mensajes del usuario en el `state` y en la base de datos.
  *
  * @param ctx - Contexto del bot, incluyendo el mensaje del usuario.
  * @param methods - Métodos del bot, como `state`.
@@ -12,7 +14,7 @@ export default async (
   ctx: BotContext,
   { state }: BotMethods
 ): Promise<void> => {
-  const { body } = ctx;
+  const { body, from, senderName } = ctx;
   try {
     // Valida que el mensaje no esté vacío
     if (!body || body.trim().length === 0) {
@@ -22,9 +24,17 @@ export default async (
       return;
     }
 
-    // Almacena el mensaje en el historial
+    // Guardar o actualizar el contacto en la base de datos
+    const contact = await saveContact(from, senderName);
+    logger.debug("Contacto guardado/obtenido:", contact);
+
+    // Guardar el mensaje recibido en la base de datos
+    await saveMessage(contact.id, "inbound", body.trim());
+    logger.debug("Mensaje guardado en la base de datos para el contacto:", from);
+
+    // Almacena el mensaje en el historial (memoria del bot)
     await handleHistory({ content: body.trim(), role: "user" }, state);
-    logger.debug("Mensaje guardado en el historial:", body.trim()); // Log para verificar el almacenamiento
+    logger.debug("Mensaje guardado en el historial:", body.trim());
   } catch (error) {
     logger.error("Error en conversationalLayer:", error);
     throw error; // Propaga el error para manejarlo en niveles superiores si es necesario
