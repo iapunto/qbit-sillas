@@ -63,9 +63,9 @@ const sellerFlow = addKeyword(EVENTS.ACTION).addAction(
         const flowMessages = [
           "¡Genial! Continuemos donde quedamos. 😊",
         ];
-        if (lastMessage && lastMessage.role === "user") {
-          flowMessages.push(`Tu último mensaje fue: *${lastMessage.content}*`);
-        }
+        // if (lastMessage && lastMessage.role === "user") {
+        //   flowMessages.push(`Tu último mensaje fue: *${lastMessage.content}*`);
+        // }
         await flowDynamic(flowMessages);
         // Actualizar el tiempo del último mensaje después de procesar
         await state.update({ lastMessageTime: currentTime });
@@ -74,7 +74,7 @@ const sellerFlow = addKeyword(EVENTS.ACTION).addAction(
 
       // Procesar saludos iniciales SOLO si el historial está vacío
       if (
-        /^(hola|buenos días|buenas tardes|buenas noches)$/i.test(
+        /^(hola|buenos días|buenas tardes|buenas noches|buen día)$/i.test(
           ctx.body.trim()
         )
       ) {

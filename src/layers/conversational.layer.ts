@@ -3,6 +3,7 @@ import { handleHistory } from "../utils/handledHistory";
 import { logger } from "../utils/logger"; // Importa el logger
 import { saveContact, getContactByPhone } from "~/database/contactRepository";
 import { saveMessage } from "~/database/messageRepository";
+import { isContactMuted } from "~/database/mutedContactRepository";
 
 /**
  * Almacena todos los mensajes del usuario en el `state` y en la base de datos.
@@ -31,6 +32,15 @@ export default async (
     // Guardar el mensaje recibido en la base de datos
     await saveMessage(contact.id, "inbound", body.trim());
     logger.debug("Mensaje guardado en la base de datos para el contacto:", from);
+
+    // Verificar si el contacto está muteado
+    const muted = await isContactMuted(from);
+    if (muted) {
+      logger.info(`El contacto ${from} está muteado. El bot no responderá.`);
+      // Opcional: podrías guardar en el historial si lo deseas
+      await handleHistory({ content: body.trim(), role: "user" }, state);
+      return;
+    }
 
     // Almacena el mensaje en el historial (memoria del bot)
     await handleHistory({ content: body.trim(), role: "user" }, state);

@@ -1,5 +1,5 @@
 import { BotContext, BotMethods } from "@builderbot/bot/dist/types";
-import sellerFlow from "../flows/seller.flow";
+import sellerFlow from "../flows/sellerFlow";
 import GeminiService from "~/services/geminiService";
 import { getHistoryParse } from "../utils/handledHistory";
 import { logger } from "~/utils/logger";
