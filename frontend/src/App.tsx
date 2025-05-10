@@ -1,7 +1,17 @@
-import ChatApp from "@/pages/ChatApp";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+import LoginPage from "./pages/LoginPage";
+import ChatApp from "./pages/ChatApp";
 
-function App() {
+function AppRouter() {
+  const { token, login } = useAuth();
+  if (!token) return <LoginPage onLogin={login} />;
   return <ChatApp />;
 }
 
-export default App;
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppRouter />
+    </AuthProvider>
+  );
+}
