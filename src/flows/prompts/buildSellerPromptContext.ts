@@ -1,4 +1,6 @@
+import { Product } from "~/data/products";
 import { sellerPrompt } from "./sellerPrompt";
+
 
 /**
  * Construye el prompt final para Gemini usando el historial, mensaje, productos y datos del contacto.
@@ -13,11 +15,13 @@ export function buildSellerPromptContext({
   userMessage,
   products,
   contact = {},
+  currentIntent,
 }: {
   historyArray: Array<{ role: string; content: string }>;
   userMessage: string;
-  products: any[];
+  products: Product[];
   contact?: Record<string, any>;
+  currentIntent?: string;
 }): string {
   // Formatea el historial como texto para el prompt
   const historyText = historyArray
@@ -44,5 +48,7 @@ export function buildSellerPromptContext({
   return sellerPrompt
     .replace("{HISTORY}", historyText)
     .replace("{MESSAGE}", userMessage)
-    .replace("{PRODUCTS}", productsText + contactText);
+    .replace("{PRODUCTS}", productsText)
+    .replace("{CONTACT_INFO}", contactText)
+    .replace("{INTENT}", currentIntent || 'HABLAR');
 } 

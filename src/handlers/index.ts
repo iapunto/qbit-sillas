@@ -33,7 +33,7 @@ class IntentHandler {
       }
       intention = firstWordMatch[0].toUpperCase();
       // Validar que la intención sea una de las opciones válidas
-      const validIntents = ["HABLAR"];
+      const validIntents = ["HABLAR", "VENDER"];
       if (!validIntents.includes(intention)) {
         logger.warn("IntentHandler - Intención no válida detectada:", intention);
         return "UNKNOWN";
@@ -60,14 +60,23 @@ export const handleIntents = async (
     logger.info(`Intent Handler - Mensaje recibido: ${message}`);
     const intention = await intentHandler.determineIntent(message, state);
     logger.info(`Intent Handler - Intención detectada: ${intention}`);
-    if (intention && intention.trim().toUpperCase() === "HABLAR") {
-      logger.info("Intent Handler - Redirigiendo a sellerFlow");
+
+    // Pass the detected intention to the state before going to the flow
+    await state.update({ currentIntent: intention });
+
+    if (intention && (intention.trim().toUpperCase() === "HABLAR" || intention.trim().toUpperCase() === "VENDER")) {
+      logger.info(`Intent Handler - Redirigiendo a sellerFlow con intención: ${intention}`);
       return gotoFlow(sellerFlow);
     } else {
       logger.warn("Intent Handler - No se reconoció la intención, enviando mensaje de error");
+      // Clear intent state if unknown
+      await state.update({ currentIntent: null });
       await flowDynamic("Lo siento, solo puedo ayudarte con información sobre sillas ergonómicas de gama media y alta de las marca SIHOO o las que tenemos disponibles. ¿Te gustaría conocer nuestros productos?");
     }
   } catch (error: any) {
     logger.error("Intent Handler - Error handling intent:", error);
+    // Clear intent state on error
+    await state.update({ currentIntent: null });
+    await flowDynamic("Lo siento, ocurrió un error interno al procesar tu solicitud. Por favor, inténtalo de nuevo más tarde.");
   }
 };
