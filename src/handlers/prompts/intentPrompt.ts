@@ -22,6 +22,8 @@ HABLAR: Esta acción se debe realizar cuando el cliente desea hacer una pregunta
 
 VENDER: Esta acción se debe realizar cuando el cliente muestra un interés explícito en un producto específico (menciona un nombre o modelo de silla, como "Sihoo Doro S300"), pregunta directamente por precios ("¿Cuánto vale esta silla?", "¿Precios?"), disponibilidad ("¿Tienen stock?"), cómo comprar, o muestra una clara intención de avanzar en el proceso de compra. La intención es presentar el/los producto/s relevante/s y guiar el proceso de compra. Ejemplos: "Quiero comprar la Sihoo S300", "¿Cómo pago?", "Envíame el link de compra de la Doro S300".
 
+ASESOR: Esta acción se debe realizar cuando el cliente solicita hablar con un asesor humano o necesita asistencia directa. La intención es transferir la conversación a un humano para que continúe la atención. Ejemplos: "Quiero hablar con un asesor", "¿Hay alguien que me pueda ayudar?", "Necesito asistencia".
+
 ### Objetivo: ###
 Comprender la intención del cliente en el contexto de la conversación con Sillas.com.co y seleccionar
 la acción más adecuada en respuesta a su declaración.
@@ -34,5 +36,5 @@ la acción más adecuada en respuesta a su declaración.
 
 ### Instrucciones ###
 Analiza el mensaje del usuario y selecciona la acción más adecuada (HABLAR o VENDER). Responde únicamente con la acción detectada, sin texto adicional.
-Respuesta ideal: HABLAR | VENDER (ejemplo: HABLAR)
-`; 
+Respuesta ideal: HABLAR | VENDER | ASESOR (ejemplo: HABLAR)
+`;
