@@ -24,7 +24,8 @@ export class Blacklist {
   private loadBlacklist(): string[] {
     try {
       const data = fs.readFileSync(blacklistPath, "utf-8");
-      return JSON.parse(data);
+      const parsedData = JSON.parse(data);
+      return Array.isArray(parsedData) ? parsedData : [];
     } catch (error: any) {
       logger.warn(
         `Blacklist - Error al cargar blacklist.json, inicializando con lista vacía: ${
