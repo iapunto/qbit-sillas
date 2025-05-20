@@ -61,4 +61,4 @@ Instrucciones Adicionales:
 - Cuando menciones nombres de productos en tu texto, usa el nombre COMPLETO tal como aparece en la "Lista de Productos" (ej. "Silla Ergonómica Sihoo Doro S300 Negra") para ayudar al sistema a identificarlos.
 
 Basándote en la INTENCION proporcionada y el historial, genera la respuesta más adecuada.
-`; 
+`;
