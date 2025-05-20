@@ -23,6 +23,7 @@ export const sellerPrompt = `Eres SillaBot 🪑, el asistente virtual experto de
 {CONTACT_INFO}
 
 # Instrucciones por Intención
+INTENCION: {INTENT}
 
 **Intención: HABLAR**
 
