@@ -22,7 +22,10 @@ export class GeminiService {
    * @param prompt - El prompt a enviar
    * @param model - (Opcional) Modelo a usar
    */
-  async generateContent(prompt: string, model?: string): Promise<GeminiResponse> {
+  async generateContent(
+    prompt: string,
+    model?: string
+  ): Promise<GeminiResponse> {
     try {
       logger.debug("GeminiService - Prompt:", prompt);
       const modelName = model || this.defaultModel;
@@ -39,7 +42,8 @@ export class GeminiService {
         error.message || error
       );
       logger.error("GeminiService - Error detallado:", error); // Log the full error object
-      throw error;
+      // Lanzar una excepción más específica
+      throw new Error(`Gemini API error: ${error.message || error}`);
     }
   }
 }

@@ -15,7 +15,7 @@ class IntentHandler {
   /**
    * Determina la intención del usuario usando IA
    */
-  async determineIntent(message: string, state: any): Promise<string> {
+  async determineIntent(message: string, state: any): Promise<any> {
     const history = getHistoryParse(state);
     const prompt = intentPrompt
       .replace("{HISTORY}", history)
@@ -28,20 +28,28 @@ class IntentHandler {
       // Extraer solo la primera palabra (la intención principal)
       const firstWordMatch = intention.match(/^\w+/);
       if (!firstWordMatch) {
-        logger.warn("IntentHandler - No se pudo extraer la intención principal del modelo.");
+        logger.warn(
+          "IntentHandler - No se pudo extraer la intención principal del modelo."
+        );
         return "UNKNOWN";
       }
       intention = firstWordMatch[0].toUpperCase();
       // Validar que la intención sea una de las opciones válidas
       const validIntents = ["HABLAR", "VENDER"];
       if (!validIntents.includes(intention)) {
-        logger.warn("IntentHandler - Intención no válida detectada:", intention);
+        logger.warn(
+          "IntentHandler - Intención no válida detectada:",
+          intention
+        );
         return "UNKNOWN";
       }
       return intention;
     } catch (error: any) {
-      logger.error("IntentHandler - Error al determinar la intención:", error.message || error);
-      throw error;
+      logger.error(
+        "IntentHandler - Error al determinar la intención:",
+        error.message || error
+      );
+      return "UNKNOWN";
     }
   }
 }
@@ -64,19 +72,31 @@ export const handleIntents = async (
     // Pass the detected intention to the state before going to the flow
     await state.update({ currentIntent: intention });
 
-    if (intention && (intention.trim().toUpperCase() === "HABLAR" || intention.trim().toUpperCase() === "VENDER")) {
-      logger.info(`Intent Handler - Redirigiendo a sellerFlow con intención: ${intention}`);
+    if (
+      intention &&
+      (intention.trim().toUpperCase() === "HABLAR" ||
+        intention.trim().toUpperCase() === "VENDER")
+    ) {
+      logger.info(
+        `Intent Handler - Redirigiendo a sellerFlow con intención: ${intention}`
+      );
       return gotoFlow(sellerFlow);
     } else {
-      logger.warn("Intent Handler - No se reconoció la intención, enviando mensaje de error");
+      logger.warn(
+        "Intent Handler - No se reconoció la intención, enviando mensaje de error"
+      );
       // Clear intent state if unknown
       await state.update({ currentIntent: null });
-      await flowDynamic("Lo siento, solo puedo ayudarte con información sobre sillas ergonómicas de gama media y alta de las marca SIHOO o las que tenemos disponibles. ¿Te gustaría conocer nuestros productos?");
+      await flowDynamic(
+        "Lo siento, solo puedo ayudarte con información sobre sillas ergonómicas de gama media y alta de las marca SIHOO o las que tenemos disponibles. ¿Te gustaría conocer nuestros productos?"
+      );
     }
   } catch (error: any) {
     logger.error("Intent Handler - Error handling intent:", error);
     // Clear intent state on error
     await state.update({ currentIntent: null });
-    await flowDynamic("Lo siento, ocurrió un error interno al procesar tu solicitud. Por favor, inténtalo de nuevo más tarde.");
+    await flowDynamic(
+      "Lo siento, ocurrió un error interno al procesar tu solicitud. Por favor, inténtalo de nuevo más tarde."
+    );
   }
 };
