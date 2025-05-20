@@ -11,7 +11,7 @@ export interface GeminiResponse {
 
 export class GeminiService {
   private genAI: GoogleGenerativeAI;
-  private defaultModel: string = "gemini-2.0-flash";
+  private defaultModel: string = "gemini-2.5-flash-preview-04-17";
 
   constructor() {
     this.genAI = new GoogleGenerativeAI(config.googleApiKey);
