@@ -1,5 +1,6 @@
 import { BotContext, BotMethods } from "@builderbot/bot/dist/types";
 import sellerFlow from "../flows/sellerFlow";
+import humanFlow from "../flows/humanFlow";
 import GeminiService from "~/services/geminiService";
 import { getHistoryParse } from "../utils/handledHistory";
 import { logger } from "~/utils/logger";
@@ -35,7 +36,7 @@ class IntentHandler {
       }
       intention = firstWordMatch[0].toUpperCase();
       // Validar que la intención sea una de las opciones válidas
-      const validIntents = ["HABLAR", "VENDER"];
+      const validIntents = ["HABLAR", "VENDER", "ASESOR"];
       if (!validIntents.includes(intention)) {
         logger.warn(
           "IntentHandler - Intención no válida detectada:",
@@ -81,6 +82,11 @@ export const handleIntents = async (
         `Intent Handler - Redirigiendo a sellerFlow con intención: ${intention}`
       );
       return gotoFlow(sellerFlow);
+    } else if (intention && intention.trim().toUpperCase() === "ASESOR") {
+      logger.info(
+        `Intent Handler - Redirigiendo a humanFlow con intención: ${intention}`
+      );
+      return gotoFlow(humanFlow);
     } else {
       logger.warn(
         "Intent Handler - No se reconoció la intención, enviando mensaje de error"
