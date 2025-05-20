@@ -13,6 +13,9 @@ import {
 import { logger } from "../utils/logger";
 import { productList } from "~/data/products";
 import { buildSellerPromptContext } from "./prompts/buildSellerPromptContext";
+// Función para esperar un tiempo aleatorio entre 1 y 3 segundos
+const delay = () =>
+  new Promise((resolve) => setTimeout(resolve, Math.random() * 2000 + 1000));
 
 // Definición de tipo para un producto (idealmente importada desde un archivo compartido)
 interface Product {
@@ -286,6 +289,7 @@ const sellerFlow = addKeyword(EVENTS.ACTION).addAction(
         // Send each sentence as a separate message
         for (const sentence of sentences) {
           if (sentence.trim() !== "") {
+            await delay(); // Esperar entre 1 y 3 segundos
             await flowDynamic(sentence.trim() + "."); // Add the period back
             await saveBotMessageToDB(ctx.from, sentence.trim() + ".");
             await handleHistory(

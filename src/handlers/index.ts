@@ -76,7 +76,8 @@ export const handleIntents = async (
     if (
       intention &&
       (intention.trim().toUpperCase() === "HABLAR" ||
-        intention.trim().toUpperCase() === "VENDER")
+        intention.trim().toUpperCase() === "VENDER" ||
+        intention.trim().toUpperCase() === "ASESOR")
     ) {
       logger.info(
         `Intent Handler - Redirigiendo a sellerFlow con intención: ${intention}`
