@@ -3,6 +3,7 @@ import { addKeyword, EVENTS } from "@builderbot/bot";
 import GeminiService from "../services/geminiService";
 import { getAllUsers } from "../database/userRepository";
 import { calculateDistance } from "../utils/calculateDistance";
+import admins from "../data/admins.json";
 import {
   getHistoryParse,
   handleHistory,
@@ -178,35 +179,36 @@ const sellerFlow = addKeyword(EVENTS.ACTION).addAction(
           );
           await state.update({ requestingLocation: false });
           // Aquí iría la lógica para encontrar y notificar al agente más cercano
-          // 1. Obtener todos los agentes
-          const allUsers = await getAllUsers();
-          const agents = allUsers.filter((user: any) => user.role === "agent");
+          // 1. Obtener todos los administradores desde el archivo JSON
+          //const allUsers = await getAllUsers();
+          //const agents = allUsers.filter((user: any) => user.role === "agent");
 
-          // 2. Calcular la distancia a cada agente
-          const distances = agents.map((agent) => {
-            const agentLatitude = agent.latitude || 0;
-            const agentLongitude = agent.longitude || 0;
+          // 2. Calcular la distancia a cada administrador
+          const distances = admins.map((admin: any) => {
+            const adminLatitude = admin.latitude || 0;
+            const adminLongitude = admin.longitude || 0;
             const distance = calculateDistance(
               latitude,
               longitude,
-              agentLatitude,
-              agentLongitude
+              adminLatitude,
+              adminLongitude
             );
-            return { agent, distance };
+            return { admin, distance };
           });
 
-          // 3. Encontrar el agente más cercano
-          const closestAgent = distances.reduce((prev: any, curr: any) =>
+          // 3. Encontrar el administrador más cercano
+          const closestAdmin = distances.reduce((prev: any, curr: any) =>
             prev.distance < curr.distance ? prev : curr
-          ).agent;
+          ).admin;
 
-          // 4. Notificar al agente
+          // 4. Notificar al administrador
           await flowDynamic(
-            `Se ha notificado al agente ${closestAgent.name} para que se ponga en contacto contigo.`
+            `Se ha notificado al administrador ${closestAdmin.name} para que se ponga en contacto contigo.`
           );
 
-          // Aquí iría la lógica para enviar un mensaje al agente
-          // usando el provider para enviar un mensaje al agente
+          // 5. Enviar un mensaje de WhatsApp al administrador con el comando para mutear el bot
+          const muteCommand = `mute ${ctx.from}`;
+          //await provider.sendMessage(closestAdmin.phone, `El cliente ${ctx.from} necesita asistencia. Por favor, usa el comando "${muteCommand}" para mutear el bot y atender al cliente.`);
 
           return;
         } else {

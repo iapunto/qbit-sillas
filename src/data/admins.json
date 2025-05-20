@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Admin 1",
+    "phone": "573001234567",
+    "latitude": 4.60971,
+    "longitude": -74.08175
+  },
+  {
+    "name": "Admin 2",
+    "phone": "573019876543",
+    "latitude": 4.65,
+    "longitude": -74.05
+  }
+]
