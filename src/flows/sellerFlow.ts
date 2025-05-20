@@ -175,45 +175,24 @@ const sellerFlow = addKeyword(EVENTS.ACTION).addAction(
           const { latitude, longitude } = ctx.message.location;
           logger.info(`Ubicación del cliente: ${latitude}, ${longitude}`);
           await flowDynamic(
-            "Gracias por compartir tu ubicación. Estamos buscando un agente cercano..."
+            "Gracias por compartir tu ubicación. Estamos contactando a un administrador para que te asista."
           );
           await state.update({ requestingLocation: false });
-          // Aquí iría la lógica para encontrar y notificar al agente más cercano
-          // 1. Obtener todos los administradores desde el archivo JSON
-          //const allUsers = await getAllUsers();
-          //const agents = allUsers.filter((user: any) => user.role === "agent");
 
-          // 2. Calcular la distancia a cada administrador
-          const distances = admins.map((admin: any) => {
-            const adminLatitude = admin.latitude || 0;
-            const adminLongitude = admin.longitude || 0;
-            const distance = calculateDistance(
-              latitude,
-              longitude,
-              adminLatitude,
-              adminLongitude
-            );
-            return { admin, distance };
-          });
+          // 1. Obtener el número de teléfono del administrador desde el archivo de configuración
+          const adminPhoneNumber = admins[0].phone;
 
-          // 3. Encontrar el administrador más cercano
-          const closestAdmin = distances.reduce((prev: any, curr: any) =>
-            prev.distance < curr.distance ? prev : curr
-          ).admin;
-
-          // 4. Notificar al administrador
-          await flowDynamic(
-            `Se ha notificado al administrador ${closestAdmin.name} para que se ponga en contacto contigo.`
-          );
-
-          // 5. Enviar un mensaje de WhatsApp al administrador con el comando para mutear el bot
+          // 2. Enviar un mensaje de WhatsApp al administrador con el comando para mutear el bot
           const muteCommand = `mute ${ctx.from}`;
-          //await provider.sendMessage(closestAdmin.phone, `El cliente ${ctx.from} necesita asistencia. Por favor, usa el comando "${muteCommand}" para mutear el bot y atender al cliente.`);
+          //await provider.sendMessage(adminPhoneNumber, `El cliente ${ctx.from} (Número: ${ctx.from}) necesita asistencia. Por favor, usa el comando "${muteCommand}" para mutear el bot y atender al cliente. Puedes copiar y pegar o reenviar este comando: ${muteCommand}`);
+          console.log(
+            `Enviando mensaje al administrador: El cliente ${ctx.from} (Número: ${ctx.from}) necesita asistencia. Por favor, usa el comando "${muteCommand}" para mutear el bot y atender al cliente. Puedes copiar y pegar o reenviar este comando: ${muteCommand}`
+          );
 
           return;
         } else {
           await flowDynamic(
-            "Por favor, comparte tu ubicación para que podamos contactar al agente más cercano."
+            "Por favor, comparte tu ubicación para que podamos contactar a un administrador."
           );
           return;
         }
