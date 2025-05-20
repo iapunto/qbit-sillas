@@ -280,11 +280,20 @@ const sellerFlow = addKeyword(EVENTS.ACTION).addAction(
 
       // Send the text response from Gemini (without the marker if present)
       if (botResponse) {
-        // Only send if there's text left
-        await flowDynamic(botResponse);
-        await saveBotMessageToDB(ctx.from, botResponse);
-        // Only save bot's text response to history, not the marker
-        await handleHistory({ content: botResponse, role: "assistant" }, state);
+        // Split the response into sentences
+        const sentences = botResponse.split(". ");
+
+        // Send each sentence as a separate message
+        for (const sentence of sentences) {
+          if (sentence.trim() !== "") {
+            await flowDynamic(sentence.trim() + "."); // Add the period back
+            await saveBotMessageToDB(ctx.from, sentence.trim() + ".");
+            await handleHistory(
+              { content: sentence.trim() + ".", role: "assistant" },
+              state
+            );
+          }
+        }
       } else if (shouldShowProducts) {
         // If Gemini's response was ONLY the marker, send a default message
         const defaultMsg =
