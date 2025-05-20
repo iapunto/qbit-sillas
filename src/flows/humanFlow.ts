@@ -14,7 +14,8 @@ const humanFlow = addKeyword(EVENTS.ACTION).addAction(
       const muteCommand = `mute ${ctx.from}`;
       await provider.sendMessage(
         adminPhoneNumber,
-        `El cliente ${ctx.from} (Número: ${ctx.from}) necesita asistencia. Por favor, usa el comando "${muteCommand}" para mutear el bot y atender al cliente. Puedes copiar y pegar o reenviar este comando: ${muteCommand}`
+        `El cliente ${ctx.from} (Número: ${ctx.from}) necesita asistencia. Por favor, usa el comando "${muteCommand}" para mutear el bot y atender al cliente. Puedes copiar y pegar o reenviar este comando: ${muteCommand}`,
+        {}
       );
       await flowDynamic(
         "Estamos contactando a un administrador para que te asista."
