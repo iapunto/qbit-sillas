@@ -5,7 +5,7 @@ import { Blacklist } from "./utils/blacklist";
 import welcomeFlow from "~/flows/welcomeFlow";
 import { config } from "~/config";
 import sellerFlow from "~/flows/sellerFlow";
-import humanFlow from "~/flows/humanFlow";
+import { humanFlow } from "~/flows/humanFlow";
 import { logger } from "~/utils/logger";
 import { saveBotMessageToDB } from "~/utils/handledHistory";
 import { getConversationByContact } from "~/database/messageRepository";
