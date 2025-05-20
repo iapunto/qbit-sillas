@@ -66,6 +66,12 @@ function setupRoutes(handleCtx: any) {
     handleCtx(async (bot: any, req: any, res: any) => {
       const { number, message, urlMedia } = req.body;
 
+      // Check if the number is from admin
+      if (blacklist.isAdmin(number)) {
+        logger.info(`Message from admin ${number}. Message not sent.`);
+        return res.end();
+      }
+
       // Check if the number is blacklisted
       if (blacklist.has(number)) {
         logger.info(`Number ${number} is blacklisted. Message not sent.`);

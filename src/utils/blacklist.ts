@@ -2,8 +2,7 @@ import { logger } from "./logger";
 import * as fs from "fs";
 import * as path from "path";
 
-const blacklistPath = new URL("../../data/blacklist.json", import.meta.url)
-  .pathname;
+const blacklistPath = path.join(process.cwd(), "src/data/blacklist.json");
 
 export class Blacklist {
   private static instance: Blacklist;
