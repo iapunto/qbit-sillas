@@ -274,7 +274,9 @@ const sellerFlow = addKeyword(EVENTS.ACTION).addAction(
 
       if (shouldShowProducts) {
         // Remove the marker from the response text that will be sent as a message
-        botResponse = botResponse.replace(showProductMarker, "").trim();
+        botResponse = botResponse
+          .replace(new RegExp(showProductMarker, "g"), "")
+          .trim();
         logger.info(
           "sellerFlow - Marker detected. Preparing to show products."
         );
